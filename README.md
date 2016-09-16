@@ -15,3 +15,6 @@ Caveats:
 
 Codesweep's primary use case is for cleaning up the Go toolchain's
 machine-translated and non-idiomatic Go source code.
+
+At this time, I suspect https://github.com/dominikh/go-unused with its
+-exported flag does everything I want with fewer false positives.
