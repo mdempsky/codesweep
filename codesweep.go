@@ -31,7 +31,7 @@ func main() {
 	used := make(map[string]bool)
 	for _, pkg := range prog.InitialPackages() {
 		for sym, obj := range pkg.Uses {
-			if skip(sym, obj) {
+			if !interesting(sym, obj) {
 				continue
 			}
 			used[obj.Id()] = true
@@ -39,7 +39,7 @@ func main() {
 	}
 	for _, pkg := range prog.InitialPackages() {
 		for sym, obj := range pkg.Defs {
-			if skip(sym, obj) {
+			if !interesting(sym, obj) {
 				continue
 			}
 			if !used[obj.Id()] {
@@ -49,9 +49,36 @@ func main() {
 	}
 }
 
-func skip(sym *ast.Ident, obj types.Object) bool {
-	if sym.Name == "_" || obj == nil {
+func interesting(sym *ast.Ident, obj types.Object) bool {
+	// Skip blank identifiers.
+	if sym.Name == "_" {
+		return false
+	}
+
+	// Skip identifiers that don't actually declare objects (e.g., package names).
+	if obj == nil {
+		return false
+	}
+
+	// Skip universal objects.
+	if obj.Pkg() == nil {
+		return false
+	}
+
+	// Fields and methods are interesting.
+	if obj, ok := obj.(*types.Var); ok && obj.IsField() {
 		return true
 	}
-	return obj.Parent() == nil || obj.Parent().Parent() == nil
+	if sig, ok := obj.Type().(*types.Signature); ok && sig.Recv() != nil {
+		return true
+	}
+
+	// Objects declared at packages scope are interesting,
+	// except for init and main.
+	if obj.Parent() == obj.Pkg().Scope() && !(sym.Name == "init" || sym.Name == "main" && obj.Pkg().Name() == "main") {
+		return true
+	}
+
+	// Otherwise, ignore for now.
+	return false
 }
