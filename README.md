@@ -10,3 +10,8 @@ Install:
 Usage:
 
     $ codesweep cmd/compile/...
+
+Caveats:
+
+Codesweep's primary use case is for cleaning up the Go toolchain's
+machine-translated and non-idiomatic Go source code.
