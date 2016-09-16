@@ -6,6 +6,7 @@ import (
 	"go/ast"
 	"go/types"
 	"log"
+	"sort"
 
 	"github.com/kisielk/gotool"
 	"golang.org/x/tools/go/loader"
@@ -37,15 +38,22 @@ func main() {
 			used[obj.Id()] = true
 		}
 	}
+
+	var msgs []string
 	for _, pkg := range prog.InitialPackages() {
 		for sym, obj := range pkg.Defs {
 			if !interesting(sym, obj) {
 				continue
 			}
 			if !used[obj.Id()] {
-				fmt.Println(conf.Fset.Position(sym.Pos()), obj)
+				msgs = append(msgs, fmt.Sprint(conf.Fset.Position(sym.Pos()), obj))
 			}
 		}
+	}
+
+	sort.Strings(msgs)
+	for _, msg := range msgs {
+		fmt.Println(msg)
 	}
 }
 
